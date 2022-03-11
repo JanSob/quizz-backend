@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
 const {check, validationResult, body} = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const ROLE = require('../data');
+const checkIfAdmin = require('../../middleware/verifyAdminToken')
+const Admin = require('../../models/Admin');
 
  
 
@@ -21,7 +21,6 @@ router.post('/login', [
 
     //login and return JWT-token
     try {
-        console.log("trying to query DB");
         const admin = await Admin.findOne({email: req.body.email});
         if(!admin) return res.status(400).send('Bad credentials');
         
@@ -30,7 +29,7 @@ router.post('/login', [
         if(!validPass){
             return res.status(400).send('Bad credentials');
         } else{
-            const token = jwt.sign({_id: user._id}, process.env.TOKEN_SECRET, { expiresIn: '1d' });
+            const token = jwt.sign({_id: admin._id}, process.env.TOKEN_SECRET, { expiresIn: '1d' });
             return res.header('auth-token', token).send();
         }
 
@@ -53,30 +52,28 @@ async(req, res) => {
     if(!errors.isEmpty()){
         return res.status(400).json({errors: errors.array()});
     }
-    
+    console.log("No erros ")
     // Check if Admin already exists in database
     try {
-        const userExists = await User.findOne({email: req.body.email});
-        if(userExists) return res.status(400).send('Admin already exists in DB');
+        const adminExists = await Admin.findOne({email: req.body.email});
+        if(adminExists) return res.status(400).send('Admin already exists in DB');
     } catch (error) {
         res.json({message: error});
         return res.status(400);
     }
     
-    // Hash password with Bcrypt with 19-rounds salt
-    const salt = await bcrypt.genSalt(19);
+    // Hash password with Bcrypt with 12-rounds salt
+    const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
     //create Admin
-    const newUser = new User(
+    const newAdmin = new Admin(
         {
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
             email: req.body.email,
             password: hashedPassword,
-            role: ROLE.BASIC
         });
     try {
-        const savedUser = await newUser.save();
+        const savedAdmin = await newAdmin.save();
+        console.log("New admin registered");
         res.json('New admin registered!');
     } catch (error) {
         res.json({message: error});

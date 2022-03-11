@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const PremiumContent = require('./PremiumContent');
 
 const MultipleChoiceSchema = mongoose.Schema({
 

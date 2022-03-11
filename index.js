@@ -10,7 +10,6 @@ require('dotenv/config');
 
 // Imports Routes
 const adminRoute = require('./routes/admin/adminRoute')
-const challengeSessionRoute = require('./routes/admin/challengeSessionRoute')
 const multipleChoiceRoute = require('./routes/admin/multipleChoiceRoute')
 const sessionGeneratorRoute = require('./routes/users/sessionGeneratorRoute')
 
@@ -24,7 +23,6 @@ app.use(bodyParser.json());
 
 // Import routes
 app.use('/admin', adminRoute);
-app.use('/challenge-sessions', challengeSessionRoute);
 app.use('/multiple-choices', multipleChoiceRoute);
 app.use('/session-generator', sessionGeneratorRoute);
 
@@ -37,7 +35,21 @@ admin.initializeApp({
 
 // Connect to DB (retry every 30 seconds)
 connectedToDB = false;
-while(!connectedToDB){
+console.log('Trying to connect to DB');
+
+mongoose.connect(process.env.DB_CONNECTION, {useNewUrlParser:true}).then(
+  () => {
+      connectedToDB = true;
+      console.log('Connected to DB:' + process.env.DB_CONNECTION);
+  },
+  err => {
+      console.log('Error trying to connect to DB, retrying in 30 seconds, errosmessage: ' + err.reason);
+      setTimeout(resolve, 30000);
+  }
+);
+
+
+/* while(!connectedToDB){
         mongoose.connect(process.env.DB_CONNECTION, {useNewUrlParser:true}).then(
         () => {
             connectedToDB = true;
@@ -45,12 +57,12 @@ while(!connectedToDB){
         },
         err => {
             console.log('Error trying to connect to DB, retrying in 30 seconds, errosmessage: ' + err.reason);
-            await new Promise(resolve => setTimeout(resolve, 30000));
+            setTimeout(resolve, 30000);
         }
     );
-}
+} */
 
 // The server starts listening
-app.listen(process.env.PORT || 3000, () => console.log("Listening at port: " + process.env.PORT ?? "3000"));
+app.listen(process.env.PORT || 3000, () => console.log("Listening at port: 3000 (if undefined) or " + process.env.PORT ));
 
 

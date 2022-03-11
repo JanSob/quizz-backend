@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const {check, validationResult, body} = require('express-validator');
 const { Mongoose } = require('mongoose');
-const MultipleChoice = require('../../../models/challenges/MultipleChoice');
-const checkIfAdmin = require('../../../middleware/verifyAdminToken');
+const MultipleChoice = require('../../models/MultipleChoice');
+const checkIfAdmin = require('../../middleware/verifyAdminToken');
 
 // Middleware
 

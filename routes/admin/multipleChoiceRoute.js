@@ -1,16 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const {check, validationResult, body} = require('express-validator');
-const { Mongoose } = require('mongoose');
+const {validationResult, body} = require('express-validator');
 const MultipleChoice = require('../../models/MultipleChoice');
 const checkIfAdmin = require('../../middleware/verifyAdminToken');
+const ApiError = require('../../error/ApiError');
 
-// Middleware
+// Regex for hex-testing (Mongoose ID-format)
+const hex = /[0-9A-Fa-f]{6}/g;
+
+
 
 // gets all the filtered multiple-choice challenges
 router.get('/query/',
 checkIfAdmin, 
-async(req, res) => {
+async(req, res, next) => {
     customQuery = {};
     const{page = 1, size = 10} = req.query;
     if(req.query.difficulty){customQuery.difficulty = req.query.difficulty;}
@@ -30,28 +33,31 @@ async(req, res) => {
           });
 
     } catch (error) {
-        res.json({message:error});
+        return next(ApiError.internal());
     }
 });
 
 
 // gets a specific multiple-choice-challenge
-router.get('/:id', 
+router.get('/index/:id', 
 checkIfAdmin, 
-async(req, res) => {
+async(req, res, next) => {
+
+    if(!hex.test(req.params.id)) return next(ApiError.badRequest('Please provide a valid ID-format'));
     
     try {
         const multipleChoice = await MultipleChoice.findById(req.params.id);
         res.json(multipleChoice);
     } catch (error) {
-        res.json({message:error});
+        return next(ApiError.internal());
     }
 });
+
 
 // gets all the multiple-choice challenges
 router.get('/',
 checkIfAdmin, 
-async(req, res) => {
+async(req, res, next) => {
     const{page = 1, size = 10} = req.query;
 
     try {
@@ -69,7 +75,7 @@ async(req, res) => {
           });
 
     } catch (error) {
-        res.json({message:error});
+        return next(ApiError.internal());
     }
 });
 
@@ -79,15 +85,18 @@ router.post('/',
 checkIfAdmin,
 [
     body('question').notEmpty().withMessage('question cannot be empty'),
-] ,async(req, res) => {  
+    body('wrong').notEmpty().withMessage('wrong-array cannot be empty'),
+    body('correct').notEmpty().withMessage('correct-array cannot be empty'),
+    body('difficulty').notEmpty().withMessage('difficulty cannot be empty')
+] ,async(req, res, next) => {  
 
     // Validation part 2
     const errors = validationResult(req);
     if(!errors.isEmpty()){
-        return res.status(400).json({errors: errors.array()});
+        return next(ApiError.badRequest({errors: errors.array()}));
     }
 
-    // Create and send new Post to DB
+    // Create and send new mc-challenge to DB
     const multipleChoice = new MultipleChoice({
         question: req.body.question,
         wrong: req.body.wrong,
@@ -99,19 +108,33 @@ checkIfAdmin,
     try{
         const savedPost = await multipleChoice.save();
         res.json(savedPost);
-    }catch(error){
-        res.status(400);
-        res.json({message: error});
+    } catch(error){
+        return next(ApiError.internal());
     }
 });
+
+
 
 // updates a multiple-choice challenge
 router.patch('/', 
 checkIfAdmin,
-async(req, res) => {
+[
+    body('question').notEmpty().withMessage('question cannot be empty'),
+    body('wrong').notEmpty().withMessage('wrong-array cannot be empty'),
+    body('correct').notEmpty().withMessage('correct-array cannot be empty'),
+    body('difficulty').notEmpty().withMessage('difficulty cannot be empty')
+],
+async(req, res, next) => {
+
+    // Validation part 2
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        return next(ApiError.badRequest({errors: errors.array()}));
+    }
+
+    if(!hex.test(req.body._id)) return next(ApiError.badRequest('Please provide a valid ID-format'));
+
     try {
-        console.log("trying to patch: " + req.body._id);
-        
         const multipleChoice = await MultipleChoice.findByIdAndUpdate(req.body._id,{
             question: req.body.question,
             wrong: req.body.wrong,
@@ -120,19 +143,23 @@ async(req, res) => {
         });
         res.json(multipleChoice);
     } catch (error) {
-        res.json({message:error});
+        return next(ApiError.internal());
     }
 });
 
+
+
 // deletes a multiple-choice challenge
-router.delete('/:id', 
+router.delete('/index/:id', 
 checkIfAdmin,
-async(req, res) => {
+async(req, res, next) => {
+    if(!hex.test(req.params.id)) return next(ApiError.badRequest('Please provide a valid ID-format'));
+
     try {
-        const multipleChoice = await MultipleChoice.deleteOne({_id: req.params.id});
-        res.json(multipleChoice);
+        const result = await MultipleChoice.deleteOne({_id: req.params.id});
+        res.json(result);
     } catch (error) {
-        res.json({message:error});
+        return next(ApiError.internal());
     }
 });
 

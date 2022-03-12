@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Mongoose } = require('mongoose');
+const ApiError = require('../../error/ApiError');
 const verifyUserToken = require('../../middleware/verifyUserToken');
 const MultipleChoice = require('../../models/MultipleChoice');
 
@@ -10,18 +11,17 @@ const MultipleChoice = require('../../models/MultipleChoice');
 // TODO: uncomment userToken-check
 router.get('/session/', 
 //verifyUserToken,
-async(req, res) => {
-    // TODO: check if sessionSize exists and is valid (not negative, not too big, an Int etx)
+async(req, res, next) => {
     // TODO: implement optional filter for difficulty: https://masteringjs.io/tutorials/mongoose/aggregate
-    sessionSize = parseInt(req.query.sessionSize);
-    console.log("Session-size: " + sessionSize);
+
+    if(!req.query.sessionSize) return next(ApiError.badRequest('No session size provided'));
+        sessionSize = parseInt(req.query.sessionSize);
+        if(sessionSize == NaN || sessionSize <= 0 || sessionSize > 10) next(ApiError.badRequest('Bad session-size request'));
     try {
-        //const filter = { $sample: { $size: sessionSize } };
         const session = await MultipleChoice.aggregate([{$sample: {size: sessionSize}}]);
         res.json(session);
     } catch (error) {
-        res.status(400);
-        res.json('Bad request');
+        return next(ApiError.internal);
     }
 });
 

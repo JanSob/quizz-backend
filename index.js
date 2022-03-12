@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const app = express();
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const apiErrorHandler = require('./error/api-error-handler');
 require('dotenv/config');
 
 
@@ -13,6 +14,7 @@ const adminRoute = require('./routes/admin/adminRoute')
 const multipleChoiceRoute = require('./routes/admin/multipleChoiceRoute')
 const sessionGeneratorRoute = require('./routes/users/sessionGeneratorRoute')
 
+
 var corsOptions = {
     exposedHeaders: 'auth-token'
   }
@@ -21,10 +23,14 @@ var corsOptions = {
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
+
 // Import routes
 app.use('/admin', adminRoute);
 app.use('/multiple-choices', multipleChoiceRoute);
 app.use('/session-generator', sessionGeneratorRoute);
+
+// apiErrorHandler must be positioned AFTER the routes
+app.use(apiErrorHandler);
 
 // Initialize Firebase-Admin-SDK
 const admin = require('firebase-admin');

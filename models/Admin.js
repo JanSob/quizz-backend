@@ -9,7 +9,9 @@ const AdminSchema = mongoose.Schema({
     },
     password:{
         type: String,
-        required: true
+        required: true,
+        min: 16,
+        max: 64
     },
     dateOfRegistration: {
         type: Date,

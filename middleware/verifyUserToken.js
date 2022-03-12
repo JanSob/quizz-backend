@@ -1,5 +1,5 @@
-const firebaseAdmin = require("firebase-admin");
 require('dotenv/config');
+const ApiError = require('../error/ApiError')
 const auth = require('firebase-admin/auth');
 
 
@@ -10,14 +10,13 @@ const auth = require('firebase-admin/auth');
 module.exports = async function(req, res, next){
     try {
         const token = req.header('auth-token');
-        if(!token) return res.status(401).send('Authorization failed, access denied');
+        if(!token) return next(ApiError.badCredentials('Authorization failed, please send a token, access denied'));
         // idToken comes from the client app
         const decodedToken = await auth.getAuth().verifyIdToken(token);
         const uid = decodedToken.uid;
-        console.log("uid: " + uid);
         req.studentId = uid;
         next();
     } catch (error) {
-        res.status(400).send('Invalid Token');
+        return next(ApiError.badCredentials('Authorization failed, access denied'));
     }
 } 

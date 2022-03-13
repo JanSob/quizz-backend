@@ -13,7 +13,7 @@ async function createTestUserToken(){
     try {
         return await admin.auth().createCustomToken(fakeUid);
     } catch (error) {
-        throw error(error);
+        console.error(new Error(error));
     }
 }
 

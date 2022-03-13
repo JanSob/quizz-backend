@@ -93,6 +93,7 @@ checkIfAdmin,
     // Validation part 2
     const errors = validationResult(req);
     if(!errors.isEmpty()){
+        //console.log({errors: errors.array()});
         return next(ApiError.badRequest({errors: errors.array()}));
     }
 

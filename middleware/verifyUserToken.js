@@ -1,6 +1,6 @@
 require('dotenv/config');
 const ApiError = require('../error/ApiError')
-const auth = require('firebase-admin/auth');
+const firebaseAdmin = require('firebase-admin');
 
 
 // This function uses FirebaseAuth to check if the token is valid.
@@ -12,7 +12,7 @@ module.exports = async function(req, res, next){
         const token = req.header('auth-token');
         if(!token) return next(ApiError.badCredentials('Authorization failed, please send a token, access denied'));
         // idToken comes from the client app
-        const decodedToken = await auth.getAuth().verifyIdToken(token);
+        const decodedToken = await firebaseAdmin.getAuth().verifyIdToken(token);
         const uid = decodedToken.uid;
         req.studentId = uid;
         next();

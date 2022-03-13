@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+const winston = require('winston');
+const Logger = require('./utils/logger');
+
 // 1. Connect to DB (retry every 30 seconds)
 // 2. When connected to DB start the server
 async function dbConnectAndListen(app) {
@@ -17,7 +20,7 @@ async function dbConnectAndListen(app) {
       );
     }
     // Start listening
-    app.listen(process.env.PORT || 3000, () => console.log("Listening at port: 3000 (if undefined) or " + process.env.PORT ));
+    app.listen(process.env.PORT || 3000, () => Logger.info("Listening at port: 3000 (if undefined) or " + process.env.PORT ));
     
   }
 

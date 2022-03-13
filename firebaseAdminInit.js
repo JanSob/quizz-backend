@@ -1,4 +1,5 @@
 const admin = require('firebase-admin');
+const Logger = require('./utils/logger');
 const serviceAccount = require("./firebaseSecrets.json");
 require('dotenv/config');
 
@@ -6,6 +7,7 @@ function initFirebaseAdmin(){
     admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
     });
+    Logger.info('Initalized firebase-admin cert');
 }
 
 async function createTestUserToken(){
